@@ -22,14 +22,14 @@ class WebsocketManager {
 
   WebsocketManager._internal();
 
-  init(String _url, String _key) async {
+  init(String _url, _key) async {
     print('WS init2');
 
     url = _url;
     key = _key; //getKeyFromBase64(_base64Key);
 
     print('_url : ' + url);
-    print('key : ' + key.utf8());
+    //print('key : ' + key);
 
     print('Ws Connect');
 
@@ -45,6 +45,7 @@ class WebsocketManager {
 
   _receiveMessage(msg) {
     print(msg);
+    _receiveFenEvent.sink.add(msg);
   }
 
   sendText(text) {

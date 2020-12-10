@@ -6,23 +6,26 @@ void main() {
       '75b7d73ea05d349e1adc97f4ff2d6327', '7x!A%D*G-JaNdRgUkXp2s5v8y/B?E(H+'));
 }
 */
-String decrypt(String content, String iv, String key) {
-  final encrypter = Encrypter(AES(Key.fromUtf8(key), mode: AESMode.cbc));
-  return encrypter.decrypt(Encrypted.fromBase16(content),
-      iv: IV.fromBase16(iv));
+String decrypt(String content, String iv, Key key) {
+  print('decriiiiiipt');
+  print(content);
+  print(iv);
+  final encrypter = Encrypter(AES(key, mode: AESMode.cbc));
+  return encrypter.decrypt(Encrypted.fromBase64(content),
+      iv: IV.fromBase64(iv));
 }
 
 encrypt(String content, Key key) {
   final iv = IV.fromSecureRandom(16);
   final encrypter = Encrypter(AES(key, mode: AESMode.cbc));
   return {
-    'content': encrypter.encrypt(content, iv: iv).base16,
-    'iv': iv.base16
+    'content': encrypter.encrypt(content, iv: iv).base64,
+    'iv': iv.base64
   };
 }
 
 Key getRandomKey() {
-  final Key key = Key.fromSecureRandom(256);
+  final Key key = Key.fromSecureRandom(32);
 
   //'7x!A%D*G-JaNdRgUkXp2s5v8y/B?E(H+'); // Key.fromSecureRandom(256);
 
@@ -31,6 +34,6 @@ Key getRandomKey() {
   return key;
 }
 
-String getRandomString({int length = 256}) {
+String getRandomString({int length = 32}) {
   return SecureRandom(length).base64;
 }

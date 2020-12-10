@@ -8,14 +8,14 @@ import 'package:qr_web_client/network/websocketManager.dart';
 class ConnectedPage extends StatefulWidget {
   final String host;
 
-  ConnectedPage(this.host);
+  ConnectedPage({Key key, @required this.host}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => ConnectedPageState();
 }
 
 class ConnectedPageState extends State<ConnectedPage> {
-  String qrText = '';
+  String text = '';
   bool isTextEmpty = true;
   TextEditingController _controller;
   var ws;
@@ -28,18 +28,30 @@ class ConnectedPageState extends State<ConnectedPage> {
     _controller = TextEditingController();
     //url = "ws://192.168.1.27:8000";
     if (room == null) {
-      //room = aesCrypt.getRandomString(length: 32);
-      //key = aesCrypt.getRandomKey();
+      room = aesCrypt.getRandomString(length: 32);
+      key = aesCrypt.getRandomKey();
       //keyBase64 = cKey.base64();
       url = 'ws://' + widget.host + '/' + room;
 
       ws = WebsocketManager();
-      ws.init(url, Key);
+      ws.init(url, key);
       print('url : ' + url);
 
       ws.receiveTextEventStream.listen((message) {
+        final decodedMessage = jsonDecode(message)['body'];
         print(
             '#~#~#~#~#~#~#~#~#~#~#~#~#~#~##~#~#~#~#~#~#~#~#~#~#~#~#~#~#stream#~#~#~#~#~#~#~#~#~#~#~#~#~#~##~#~#~#~#~#~#~#~#~#~#~#~#~#~#');
+        print(decodedMessage);
+        print(message);
+        print('key : ');
+        print(key.bytes);
+        print(decodedMessage['content']);
+        print(decodedMessage['iv']);
+        setState(() {
+          text = aesCrypt.decrypt(decodedMessage['content'].toString(),
+              decodedMessage['iv'].toString(), key);
+        });
+        //jsonDecode(message)['']
       });
     }
   }
@@ -52,18 +64,17 @@ class ConnectedPageState extends State<ConnectedPage> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      body: //Center(        child:
-          Center(
-              /*child: '' == null
-                  ? QrImage(
-                      data: jsonEncode(
-                          {'host': widget.host, 'room': room, 'key': ''}),
-                      version: QrVersions.auto,
-                      size: 500.0,
-                    )
-                  : */
-              child: CircularProgressIndicator()),
-      //),
-    );
+        body: Column(children: <Widget>[
+      Center(
+          child: '' != null
+              ? QrImage(
+                  data: jsonEncode(
+                      {'host': widget.host, 'room': room, 'key': key.base64}),
+                  version: QrVersions.auto,
+                  size: 500.0,
+                )
+              : CircularProgressIndicator()),
+      SelectableText(text),
+    ]));
   }
 }

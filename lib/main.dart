@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       appBar: AppBar(
         title: Text('Qr transfer'),
       ),
-      body: Center(child: ConnectedPage("192.168.1.27:8000")),
+      body: Center(child: ConnectedPage(host: "192.168.1.68:8000")),
     );
   }
 }
