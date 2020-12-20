@@ -7,40 +7,18 @@ import 'package:web_socket_channel/status.dart' as status;
 import 'package:web_socket_channel/html.dart';
 
 class WebsocketManager {
-  static final WebsocketManager _websocketManager =
-      WebsocketManager._internal();
   static var _channel;
-  static String url;
-  static var key;
+  final String url;
+  final key;
+
   static bool isConnected = false;
-  factory WebsocketManager() {
-    print('WS Start');
-    //_websocketManager.init();
 
-    return _websocketManager;
-  }
-
-  WebsocketManager._internal();
-
-  init(String _url, _key) async {
-    print('WS init2');
-
-    url = _url;
-    key = _key; //getKeyFromBase64(_base64Key);
-
-    print('_url : ' + url);
-    //print('key : ' + key);
-
+  WebsocketManager(this.url, this.key) {
     print('Ws Connect');
-
-    if (isConnected == false) {
-      _channel = HtmlWebSocketChannel.connect(_url);
-      _channel.stream.listen((message) {
-        _receiveMessage(message);
-      });
-      isConnected = true;
-    }
-    return _websocketManager;
+    _channel = HtmlWebSocketChannel.connect(url);
+    _channel.stream.listen((message) {
+      _receiveMessage(message);
+    });
   }
 
   _receiveMessage(msg) {

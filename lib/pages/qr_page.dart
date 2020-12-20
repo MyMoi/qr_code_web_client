@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:qr_web_client/communication/encryption.dart' as aesCrypt;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:qr_web_client/network/websocketManager.dart';
+import 'package:qr_web_client/communication/messageManager.dart';
+import 'package:qr_web_client/pages/talk_page.dart';
 
 class ConnectedPage extends StatefulWidget {
   final String host;
@@ -15,50 +15,32 @@ class ConnectedPage extends StatefulWidget {
 }
 
 class ConnectedPageState extends State<ConnectedPage> {
-  String text = '';
   bool isTextEmpty = true;
   TextEditingController _controller;
-  var ws;
+  MessageManager messageManager = MessageManager();
   var key;
   String room;
   String url;
 
   void initState() {
     super.initState();
-    _controller = TextEditingController();
-    //url = "ws://192.168.1.27:8000";
-    if (room == null) {
-      room = aesCrypt.getRandomString(length: 32);
-      key = aesCrypt.getRandomKey();
-      //keyBase64 = cKey.base64();
-      url = 'ws://' + widget.host + '/' + room;
-
-      ws = WebsocketManager();
-      ws.init(url, key);
-      print('url : ' + url);
-
-      ws.receiveTextEventStream.listen((message) {
-        final decodedMessage = jsonDecode(message)['body'];
-        print(
-            '#~#~#~#~#~#~#~#~#~#~#~#~#~#~##~#~#~#~#~#~#~#~#~#~#~#~#~#~#stream#~#~#~#~#~#~#~#~#~#~#~#~#~#~##~#~#~#~#~#~#~#~#~#~#~#~#~#~#');
-        print(decodedMessage);
-        print(message);
-        print('key : ');
-        print(key.bytes);
-        print(decodedMessage['content']);
-        print(decodedMessage['iv']);
-        setState(() {
-          text = aesCrypt.decrypt(decodedMessage['content'].toString(),
-              decodedMessage['iv'].toString(), key);
-        });
-        //jsonDecode(message)['']
-      });
-    }
+    print(messageManager);
+    messageManager.systemEventStream.listen((message) {
+      print(message);
+      print("abc");
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => TalkPage()),
+      );
+    });
+    //messageManager.connect('ws://' + widget.host).then((value) => print(value));
+    url = '';
+    print('initState.');
   }
 
   void dispose() {
     _controller.dispose();
-    ws.disconnect();
+    // ws.disconnect();
     super.dispose();
   }
 
@@ -66,15 +48,27 @@ class ConnectedPageState extends State<ConnectedPage> {
     return Scaffold(
         body: Column(children: <Widget>[
       Center(
-          child: '' != null
-              ? QrImage(
-                  data: jsonEncode(
-                      {'host': widget.host, 'room': room, 'key': key.base64}),
+        child: FutureBuilder(
+            future: messageManager.connect('ws://' + widget.host),
+            builder: (context, snapshot) {
+              print("future");
+              print(messageManager.key);
+              if (snapshot.hasData) {
+                return QrImage(
+                  data: jsonEncode({
+                    'host': widget.host,
+                    'room': messageManager.room,
+                    'key': messageManager.key.base64
+                  }),
                   version: QrVersions.auto,
                   size: 500.0,
-                )
-              : CircularProgressIndicator()),
-      SelectableText(text),
+                  backgroundColor: Colors.white,
+                );
+              } else {
+                return CircularProgressIndicator();
+              }
+            }),
+      ),
     ]));
   }
 }

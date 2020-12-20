@@ -1,0 +1,69 @@
+//import 'dart:html';
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:qr_web_client/network/websocketManager.dart';
+import 'package:qr_web_client/communication/encryption.dart' as aesCrypt;
+
+class MessageManager {
+  static final MessageManager _instance = MessageManager._internal();
+  WebsocketManager ws;
+  String url;
+  String room;
+  var key;
+  List<String> messageList = [];
+
+  factory MessageManager() => _instance;
+
+  MessageManager._internal() {
+    print("New instance of Message Manager");
+  }
+
+  Future<String> connect(_url) {
+    // url = "ws://192.168.1.27:8000";
+//        if (room == null) {
+    if (url == null) {
+      room = aesCrypt.getRandomString(length: 32);
+      key = aesCrypt.getRandomKey();
+      print('key : ');
+      print(key);
+      url = _url + '/' + room;
+      ws = WebsocketManager(url, key);
+      print('url : ' + url);
+      assert(ws != null);
+      ws.receiveTextEventStream.listen((message) {
+        final decodedMessage = jsonDecode(message);
+        if (decodedMessage['event'] == 'newText') {
+          String decodedText = aesCrypt.decrypt(
+              decodedMessage['body']['content'].toString(),
+              decodedMessage['body']['iv'].toString(),
+              key);
+          messageList.add(decodedText);
+          _updateMessageList.sink.add(decodedText);
+        } else if (decodedMessage['event'] == 'newConnection') {
+          _systemEvent.sink.add('newConnection');
+          print("new connection.");
+        }
+      });
+    }
+    return Future.value('bob');
+  }
+
+  void disconnect() {
+    ws.disconnect();
+
+    _updateMessageList.close();
+    _systemEvent.close();
+  }
+
+  final _updateMessageList = StreamController<String>.broadcast();
+
+  Stream<String> get updateMessageListStream =>
+      _updateMessageList.stream; // return new party id
+
+  final _systemEvent = StreamController<String>.broadcast();
+
+  Stream<String> get systemEventStream =>
+      _systemEvent.stream; // return new party id
+
+}
