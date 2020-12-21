@@ -49,7 +49,7 @@ class ConnectedPageState extends State<ConnectedPage> {
         body: Column(children: <Widget>[
       Center(
         child: FutureBuilder(
-            future: messageManager.connect('ws://' + widget.host),
+            future: messageManager.connect(widget.host),
             builder: (context, snapshot) {
               print("future");
               print(messageManager.key);
