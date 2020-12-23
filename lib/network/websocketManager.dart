@@ -26,15 +26,9 @@ class WebsocketManager {
     _receiveFenEvent.sink.add(msg);
   }
 
-  sendText(text) {
-    if (text != "")
-      _channel.sink
-          .add(_createJsonRequest('newText', aesCrypt.encrypt(text, key)));
-  }
-
-  _createJsonRequest(event, body) {
-    var request = {'event': event, 'body': body};
-    return jsonEncode(request);
+  void sendWs(text) {
+    _channel.sink.add(text);
+    print(text);
   }
 
   void disconnect() {

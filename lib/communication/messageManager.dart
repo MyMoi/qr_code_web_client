@@ -56,6 +56,16 @@ class MessageManager {
     _systemEvent.close();
   }
 
+  sendText(text) {
+    if (text != "")
+      ws.sendWs(_createJsonRequest('newText', aesCrypt.encrypt(text, key)));
+  }
+
+  _createJsonRequest(event, body) {
+    var request = {'event': event, 'body': body};
+    return jsonEncode(request);
+  }
+
   final _updateMessageList = StreamController<String>.broadcast();
 
   Stream<String> get updateMessageListStream =>

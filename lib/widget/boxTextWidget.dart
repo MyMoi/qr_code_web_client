@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -62,7 +63,9 @@ class BoxText extends StatelessWidget {
                       onPressed: () {},
                     ),
                     OutlineButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: content));
+                      },
                       icon: Icon(Icons.copy_outlined),
                       label: Text("Copy"),
                     ),

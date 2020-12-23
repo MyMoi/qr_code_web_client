@@ -1,43 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:qr_web_client/communication/messageManager.dart';
 
-class InputBox extends StatelessWidget {
+class InputBox extends StatefulWidget {
   const InputBox({
     Key key,
   }) : super(key: key);
+
+  @override
+  _InputBoxState createState() => _InputBoxState();
+}
+
+class _InputBoxState extends State<InputBox> {
+  MessageManager _messageManager;
+  TextEditingController _controller;
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+    _messageManager = MessageManager();
+  }
+
+  void dispose() {
+    _controller.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 100, vertical: 10),
       padding: EdgeInsets.all(10),
-
-      // width: Double.infinite,
       decoration: BoxDecoration(
-          //color: Colors.amber,
           color: Colors.white10,
-          //border: Border.all(color: Colors.grey),
           borderRadius: BorderRadius.all(Radius.circular(10))),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         //mainAxisSize: MainAxisSize,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          // Expanded(
-          //  child:
-          ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxHeight:
-                      610 //put here the max height to which you need to resize the textbox
-
-                  ),
-              child: TextField(
-                maxLines: null,
-                decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Type somethings...',
-                    hintStyle: TextStyle(color: Colors.white60)),
-              )), //),
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              maxLines: null,
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Type somethings...',
+                  hintStyle: TextStyle(color: Colors.white60)),
+            ),
+          ), //),
+          //Flexible(child:
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
@@ -45,17 +57,36 @@ class InputBox extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     IconButton(
+                      //highlightColor: Colors.redAccent,
+                      //hoverColor: Colors.redAccent,
+                      splashColor: Colors.redAccent,
+
                       icon: Icon(Icons.delete),
-                      onPressed: () {},
+                      onPressed: () {
+                        _controller.text = '';
+                      },
                     ),
                     OutlineButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.copy_outlined),
-                      label: Text("Copy"),
+                      onPressed: () {
+                        Clipboard.getData(Clipboard.kTextPlain)
+                            .then((value) => {
+                                  print(value.text),
+                                  if (value.text != '')
+                                    {
+                                      _controller.text = value.text,
+                                      // isTextEmpty = false;
+                                    }
+                                });
+                      },
+                      icon: Icon(Icons.paste_outlined),
+                      label: Text("Paste"),
                     ),
                   ]),
               IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  print("value : " + _controller.text);
+                  _messageManager.sendText(_controller.text);
+                },
                 icon: Icon(Icons.send,
                     color: // Color(
                         //0xffc5e1a5), //
@@ -63,6 +94,7 @@ class InputBox extends StatelessWidget {
               ),
             ],
           ),
+          //),
         ],
       ),
     );

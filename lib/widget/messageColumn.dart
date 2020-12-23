@@ -23,20 +23,32 @@ class _MessageColumnState extends State<MessageColumn> {
     });*/
     // List messageList = ['aaaa', 'aaab', 'caaaa', 'aaaa https://google.com'];
     return CustomScrollView(slivers: <Widget>[
-      /*  const SliverAppBar(
+      const SliverAppBar(
         //stretch: true,
+        backgroundColor: const Color(0xff303030),
+
+        //      elevation: 0,
         pinned: true,
-        collapsedHeight: 200.0,
+        floating: true,
+        snap: true,
+        collapsedHeight: 150.0,
+        expandedHeight: 600,
+
         flexibleSpace: InputBox(),
-      ),*/
+      ),
+
+      //Sliver
+      //InputBox(),
       StreamBuilder(
           stream: _messageManager.updateMessageListStream,
           builder: (context, snapshot) {
+            //print(Theme.of(context).backgroundColor);
             return SliverList(
               delegate: SliverChildBuilderDelegate(
                 (BuildContext context, int index) {
                   return BoxText(
-                    content: _messageManager.messageList[index],
+                    content: _messageManager.messageList[
+                        _messageManager.messageList.length - (index + 1)],
                   );
                 },
                 childCount: _messageManager.messageList.length,
