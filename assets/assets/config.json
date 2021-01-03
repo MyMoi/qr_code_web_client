@@ -1,3 +1,3 @@
 {
-    "apiUrl": "wss://ws.qrts.dadge.fr"
+    "apiUrls": "wss://ws.qrts.dadge.fr"
 }

@@ -19,13 +19,16 @@ class MessageManager {
     print("New instance of Message Manager");
   }
 
-  Future<String> connect(_url) {
+  Future<String> connectNewRoom(String _url) {
     // url = "ws://192.168.1.27:8000";
 //        if (room == null) {
     if (url == null) {
       room = aesCrypt.getRandomString(length: 32);
+
       key = aesCrypt.getRandomKey();
-      print('key : ');
+      url = _url + '/' + room;
+      connectToRoom();
+      /* print('key : ');
       print(key);
       url = _url + '/' + room;
       ws = WebsocketManager(url, key);
@@ -33,27 +36,127 @@ class MessageManager {
       assert(ws != null);
       ws.receiveTextEventStream.listen((message) {
         final decodedMessage = jsonDecode(message);
-        if (decodedMessage['event'] == 'newText') {
-          String decodedText = aesCrypt.decrypt(
-              decodedMessage['body']['content'].toString(),
-              decodedMessage['body']['iv'].toString(),
-              key);
-          messageList.add(decodedText);
-          _updateMessageList.sink.add(decodedText);
-        } else if (decodedMessage['event'] == 'newConnection') {
-          _systemEvent.sink.add('newConnection');
-          print("new connection.");
+        print(decodedMessage);
+        switch (decodedMessage['event']) {
+          case "newText":
+            {
+              String decodedText = aesCrypt.decrypt(
+                  decodedMessage['body']['content'].toString(),
+                  decodedMessage['body']['iv'].toString(),
+                  key);
+              messageList.add(decodedText);
+              _updateMessageList.sink.add(decodedText);
+            }
+            break;
+
+          case "deviceConnected":
+            {
+              _systemEvent.sink.add('newConnection');
+              print("device connected");
+            }
+            break;
+
+          case "connectSession":
+            {
+              final String decodedBody = aesCrypt.decrypt(
+                  decodedMessage['body']['content'].toString(),
+                  decodedMessage['body']['iv'].toString(),
+                  key);
+
+              final roomObject = jsonDecode(decodedBody);
+              print('url = ' + roomObject['url']);
+              print('key = ' + roomObject['key']);
+              disconnect();
+              connect(roomObject['url'] + roomObject['key']);
+            }
+            break;
+
+          default:
+            {
+              print("Invalid event");
+              print(decodedMessage['event']);
+            }
+            break;
         }
-      });
+      });*/
     }
     return Future.value('bob');
   }
 
-  void disconnect() {
-    ws.disconnect();
+  Future<String> connectToRoom([String _url, String _keyBase64]) {
+    if (_url == null || _keyBase64 == null) {
+      print("connection session deja existante");
+      print(_url);
 
-    _updateMessageList.close();
-    _systemEvent.close();
+      print(_keyBase64);
+    } else {
+      key = aesCrypt.getKeyFromString(keyString: _keyBase64);
+      print('key : ');
+      print(key);
+      url = _url;
+    }
+    ws = WebsocketManager(url, key);
+    print('url : ' + url);
+
+    assert(url != null);
+    ws.receiveTextEventStream.listen((message) {
+      final decodedMessage = jsonDecode(message);
+      print(decodedMessage);
+      switch (decodedMessage['event']) {
+        case "newText":
+          {
+            String decodedText = aesCrypt.decrypt(
+                decodedMessage['body']['content'].toString(),
+                decodedMessage['body']['iv'].toString(),
+                key);
+            messageList.add(decodedText);
+            _updateMessageList.sink.add(decodedText);
+          }
+          break;
+
+        case "deviceConnected":
+          {
+            _systemEvent.sink.add('newConnection');
+            print("device connected");
+          }
+          break;
+
+        case "connectSession":
+          {
+            final String decodedBody = aesCrypt.decrypt(
+                decodedMessage['body']['content'].toString(),
+                decodedMessage['body']['iv'].toString(),
+                key);
+
+            final roomObject = jsonDecode(decodedBody);
+            print('url = ' + roomObject['url']);
+            print('key = ' + roomObject['key']);
+            disconnect();
+            connectToRoom(roomObject['url'], roomObject['key'])
+                .then((value) => _systemEvent.sink.add('connected'));
+          }
+          break;
+
+        default:
+          {
+            print("Invalid event");
+            print(decodedMessage['event']);
+          }
+          break;
+      }
+    });
+
+    return Future.value('bob');
+  }
+
+  void disconnect() {
+    print("mam disconnected;");
+    ws.disconnect();
+    // _updateMessageList.close();
+    // _systemEvent.close();
+    ws = null;
+    key = null;
+    url = null;
   }
 
   sendText(text) {
