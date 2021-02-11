@@ -23,62 +23,11 @@ class MessageManager {
     // url = "ws://192.168.1.27:8000";
 //        if (room == null) {
     if (url == null) {
-      room = aesCrypt.getRandomString(length: 32);
+      room = aesCrypt.getRandomString(length: 32); //.replaceAll('/', 'a');
 
       key = aesCrypt.getRandomKey();
       url = _url + '/' + room;
       connectToRoom();
-      /* print('key : ');
-      print(key);
-      url = _url + '/' + room;
-      ws = WebsocketManager(url, key);
-      print('url : ' + url);
-      assert(ws != null);
-      ws.receiveTextEventStream.listen((message) {
-        final decodedMessage = jsonDecode(message);
-        print(decodedMessage);
-        switch (decodedMessage['event']) {
-          case "newText":
-            {
-              String decodedText = aesCrypt.decrypt(
-                  decodedMessage['body']['content'].toString(),
-                  decodedMessage['body']['iv'].toString(),
-                  key);
-              messageList.add(decodedText);
-              _updateMessageList.sink.add(decodedText);
-            }
-            break;
-
-          case "deviceConnected":
-            {
-              _systemEvent.sink.add('newConnection');
-              print("device connected");
-            }
-            break;
-
-          case "connectSession":
-            {
-              final String decodedBody = aesCrypt.decrypt(
-                  decodedMessage['body']['content'].toString(),
-                  decodedMessage['body']['iv'].toString(),
-                  key);
-
-              final roomObject = jsonDecode(decodedBody);
-              print('url = ' + roomObject['url']);
-              print('key = ' + roomObject['key']);
-              disconnect();
-              connect(roomObject['url'] + roomObject['key']);
-            }
-            break;
-
-          default:
-            {
-              print("Invalid event");
-              print(decodedMessage['event']);
-            }
-            break;
-        }
-      });*/
     }
     return Future.value('bob');
   }

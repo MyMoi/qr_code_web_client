@@ -1,3 +1,4 @@
 {
-    "apiUrls": "wss://ws.qrts.dadge.fr"
+    "prodapiUrl": "wss://ws.qrts.dadge.fr",
+    "apiUrl": "ws://192.168.1.68:8000"
 }

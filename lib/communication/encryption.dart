@@ -35,7 +35,7 @@ Key getRandomKey() {
 }
 
 String getRandomString({int length = 32}) {
-  return SecureRandom(length).base64;
+  return SecureRandom(length).base16;
 }
 
 Key getKeyFromString({keyString}) {
