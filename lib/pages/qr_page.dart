@@ -56,8 +56,9 @@ class ConnectedPageState extends State<ConnectedPage> {
               if (snapshot.hasData) {
                 return QrImage(
                   data: jsonEncode({
-                    'host': widget.host,
+                    'wsHost': widget.host,
                     'room': messageManager.room,
+                    'fileHost': messageManager.fileApiUrl,
                     'key': messageManager.key.base64
                   }),
                   version: QrVersions.auto,

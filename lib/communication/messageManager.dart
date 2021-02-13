@@ -5,12 +5,16 @@ import 'dart:convert';
 import 'package:qr_web_client/network/websocketManager.dart';
 import 'package:qr_web_client/communication/encryption.dart' as aesCrypt;
 
+import 'messageManagerFunctions/fileDownload.dart';
+import 'messageManagerFunctions/fileUpload.dart';
+
 class MessageManager {
   static final MessageManager _instance = MessageManager._internal();
   WebsocketManager ws;
-  String url;
-  String room;
-  var key;
+  String _wsApiUrl;
+  String _fileApiUrl = "http://192.168.1.68:3000"; //TODO Change default url
+  String _room;
+  var _key;
   List<String> messageList = [];
 
   factory MessageManager() => _instance;
@@ -22,11 +26,11 @@ class MessageManager {
   Future<String> connectNewRoom(String _url) {
     // url = "ws://192.168.1.27:8000";
 //        if (room == null) {
-    if (url == null) {
-      room = aesCrypt.getRandomString(length: 32); //.replaceAll('/', 'a');
+    if (_wsApiUrl == null) {
+      _room = aesCrypt.getRandomString(length: 32); //.replaceAll('/', 'a');
 
-      key = aesCrypt.getRandomKey();
-      url = _url + '/' + room;
+      _key = aesCrypt.getRandomKey();
+      _wsApiUrl = _url + '/' + _room;
       connectToRoom();
     }
     return Future.value('bob');
@@ -39,15 +43,15 @@ class MessageManager {
 
       print(_keyBase64);
     } else {
-      key = aesCrypt.getKeyFromString(keyString: _keyBase64);
+      _key = aesCrypt.getKeyFromString(keyString: _keyBase64);
       print('key : ');
-      print(key);
-      url = _url;
+      print(_key);
+      _wsApiUrl = _url;
     }
-    ws = WebsocketManager(url, key);
-    print('url : ' + url);
+    ws = WebsocketManager(_wsApiUrl, _key);
+    print('url : ' + _wsApiUrl);
 
-    assert(url != null);
+    assert(_wsApiUrl != null);
     ws.receiveTextEventStream.listen((message) {
       final decodedMessage = jsonDecode(message);
       print(decodedMessage);
@@ -57,9 +61,22 @@ class MessageManager {
             String decodedText = aesCrypt.decrypt(
                 decodedMessage['body']['content'].toString(),
                 decodedMessage['body']['iv'].toString(),
-                key);
+                _key);
             messageList.add(decodedText);
             _updateMessageList.sink.add(decodedText);
+          }
+          break;
+        case 'newFile':
+          {
+            String decodedText = aesCrypt.decrypt(
+                decodedMessage['body']['content'].toString(),
+                decodedMessage['body']['iv'].toString(),
+                _key);
+            messageList.add(decodedText);
+            _updateMessageList.sink.add(decodedText);
+            final mapDecoded = jsonDecode(decodedText);
+            downloadFile(
+                mapDecoded['url'], mapDecoded['iv'], mapDecoded['filename']);
           }
           break;
 
@@ -75,7 +92,7 @@ class MessageManager {
             final String decodedBody = aesCrypt.decrypt(
                 decodedMessage['body']['content'].toString(),
                 decodedMessage['body']['iv'].toString(),
-                key);
+                _key);
 
             final roomObject = jsonDecode(decodedBody);
             print('url = ' + roomObject['url']);
@@ -104,18 +121,32 @@ class MessageManager {
     // _updateMessageList.close();
     // _systemEvent.close();
     ws = null;
-    key = null;
-    url = null;
+    _key = null;
+    _wsApiUrl = null;
   }
 
   sendText(text) {
     if (text != "")
-      ws.sendWs(_createJsonRequest('newText', aesCrypt.encrypt(text, key)));
+      ws.sendWs(_createJsonRequest('newText', aesCrypt.encrypt(text, _key)));
   }
 
   _createJsonRequest(event, body) {
     var request = {'event': event, 'body': body};
     return jsonEncode(request);
+  }
+
+  Future sendFile() async {
+    uploadFile().then((value) {
+      ws.sendWs(_createJsonRequest(
+          'newFile',
+          aesCrypt.encrypt(
+              jsonEncode({
+                'url': (fileDownloadApi + '/' + value['name']),
+                'iv': value['iv'].base64,
+                'filename': value['originFilename']
+              }),
+              _key)));
+    });
   }
 
   final _updateMessageList = StreamController<String>.broadcast();
@@ -128,4 +159,11 @@ class MessageManager {
   Stream<String> get systemEventStream =>
       _systemEvent.stream; // return new party id
 
+  get wsApi => (_wsApiUrl + '/' + _room);
+  get key => _key;
+  get fileApiUrl => _fileApiUrl;
+  get fileUploadApi => (_fileApiUrl + '/upload/' + _room);
+  get fileDownloadApi => (_fileApiUrl + '/download/' + _room);
+
+  get room => _room;
 }

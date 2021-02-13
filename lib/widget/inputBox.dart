@@ -81,6 +81,16 @@ class _InputBoxState extends State<InputBox> {
                       icon: Icon(Icons.paste_outlined),
                       label: Text("Paste"),
                     ),
+                    IconButton(
+                      //highlightColor: Colors.redAccent,
+                      //hoverColor: Colors.redAccent,
+                      //splashColor: Colors.redAccent,
+
+                      icon: Icon(Icons.attach_file),
+                      onPressed: () {
+                        _messageManager.sendFile();
+                      },
+                    ),
                   ]),
               IconButton(
                 onPressed: () {
