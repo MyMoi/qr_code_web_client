@@ -33,7 +33,9 @@ class MyApp extends StatelessWidget {
             future: rootBundle.loadString('assets/config.json'),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                return ConnectedPage(host: jsonDecode(snapshot.data)["apiUrl"]);
+                final decoded = jsonDecode(snapshot.data);
+                return ConnectedPage(
+                    wsHost: decoded["wsHost"], fileHost: decoded["fileHost"]);
               } else {
                 return CircularProgressIndicator();
               }

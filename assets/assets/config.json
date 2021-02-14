@@ -1,4 +1,6 @@
 {
-    "prodapiUrl": "wss://ws.qrts.dadge.fr",
-    "apiUrl": "ws://192.168.1.68:8000"
+    "dev_wsHost": "ws://192.168.1.68:8000",
+    "dev_fileHost": "http://192.1.68:3000",
+    "wsHost": "wss://ws.qrts.dadge.fr",
+    "fileHost": "https://file.qrts.dadge.fr"
 }

@@ -12,7 +12,7 @@ class MessageManager {
   static final MessageManager _instance = MessageManager._internal();
   WebsocketManager ws;
   String _wsApiUrl;
-  String _fileApiUrl = "http://192.168.1.68:3000"; //TODO Change default url
+  String _fileApiUrl;
   String _room;
   var _key;
   List<String> messageList = [];
@@ -23,33 +23,38 @@ class MessageManager {
     print("New instance of Message Manager");
   }
 
-  Future<String> connectNewRoom(String _url) {
+  Future<String> connectNewRoom(String _wsHost, String _fileHost) {
     // url = "ws://192.168.1.27:8000";
 //        if (room == null) {
     if (_wsApiUrl == null) {
       _room = aesCrypt.getRandomString(length: 32); //.replaceAll('/', 'a');
 
       _key = aesCrypt.getRandomKey();
-      _wsApiUrl = _url + '/' + _room;
+      _wsApiUrl = _wsHost;
+      _fileApiUrl = _fileHost;
       connectToRoom();
     }
     return Future.value('bob');
   }
 
-  Future<String> connectToRoom([String _url, String _keyBase64]) {
-    if (_url == null || _keyBase64 == null) {
+  Future<String> connectToRoom(
+      [String _wsHost, String _fileHost, String _roomId, String _keyBase64]) {
+    if (_wsHost == null || _keyBase64 == null) {
       print("connection session deja existante");
-      print(_url);
+      print(_wsHost);
 
       print(_keyBase64);
     } else {
       _key = aesCrypt.getKeyFromString(keyString: _keyBase64);
       print('key : ');
       print(_key);
-      _wsApiUrl = _url;
+      _room = _roomId;
+      _fileApiUrl = _fileHost;
+      _wsApiUrl = _wsHost;
     }
-    ws = WebsocketManager(_wsApiUrl, _key);
-    print('url : ' + _wsApiUrl);
+
+    ws = WebsocketManager(wsApi, _key);
+    print('url : ' + wsApi);
 
     assert(_wsApiUrl != null);
     ws.receiveTextEventStream.listen((message) {
@@ -95,10 +100,12 @@ class MessageManager {
                 _key);
 
             final roomObject = jsonDecode(decodedBody);
-            print('url = ' + roomObject['url']);
-            print('key = ' + roomObject['key']);
+            //print('url = ' + roomObject['url']);
+            //print('key = ' + roomObject['key']);
             disconnect();
-            connectToRoom(roomObject['url'], roomObject['key'])
+
+            connectToRoom(roomObject['wsHost'], roomObject['fileHost'],
+                    roomObject['room'], roomObject['key'])
                 .then((value) => _systemEvent.sink.add('connected'));
           }
           break;

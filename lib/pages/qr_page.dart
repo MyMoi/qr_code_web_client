@@ -6,9 +6,11 @@ import 'package:qr_web_client/communication/messageManager.dart';
 import 'package:qr_web_client/pages/talk_page.dart';
 
 class ConnectedPage extends StatefulWidget {
-  final String host;
+  final String wsHost;
+  final String fileHost;
 
-  ConnectedPage({Key key, @required this.host}) : super(key: key);
+  ConnectedPage({Key key, @required this.wsHost, @required this.fileHost})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => ConnectedPageState();
@@ -27,7 +29,6 @@ class ConnectedPageState extends State<ConnectedPage> {
     print(messageManager);
     messageManager.systemEventStream.listen((message) {
       print(message);
-      print("abc");
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => TalkPage()),
@@ -49,14 +50,15 @@ class ConnectedPageState extends State<ConnectedPage> {
         body: Column(children: <Widget>[
       Center(
         child: FutureBuilder(
-            future: messageManager.connectNewRoom(widget.host),
+            future:
+                messageManager.connectNewRoom(widget.wsHost, widget.fileHost),
             builder: (context, snapshot) {
               print("future");
               print(messageManager.key);
               if (snapshot.hasData) {
                 return QrImage(
                   data: jsonEncode({
-                    'wsHost': widget.host,
+                    'wsHost': widget.wsHost,
                     'room': messageManager.room,
                     'fileHost': messageManager.fileApiUrl,
                     'key': messageManager.key.base64
