@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qr_web_client/communication/messageManager.dart';
@@ -61,7 +62,7 @@ class ConnectedPageState extends State<ConnectedPage> {
                     'wsHost': widget.wsHost,
                     'room': messageManager.room,
                     'fileHost': messageManager.fileApiUrl,
-                    'key': messageManager.key.base64
+                    'key': base64Encode(messageManager.keyData.bytes),
                   }),
                   version: QrVersions.auto,
                   size: 500.0,
